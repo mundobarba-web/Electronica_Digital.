@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conversor de Sistemas Numéricos</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: #0a0e1a;
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 30px 16px;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    text-align: center;
+    background: linear-gradient(135deg, #00e5ff, #7c3aed, #ff6b35);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 6px;
+  }
+
+  .sub {
+    text-align: center;
+    color: #64748b;
+    font-size: 12px;
+    letter-spacing: 1px;
+    margin-bottom: 30px;
+  }
+
+  .card {
+    background: #111827;
+    border: 1px solid #1e2d4a;
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 20px;
+    max-width: 860px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .card-title {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #00e5ff;
+    margin-bottom: 18px;
+    border-bottom: 1px solid #1e2d4a;
+    padding-bottom: 10px;
+  }
+
+  /* INPUT LAYOUT — stacked para evitar cortes */
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #64748b;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    background: #1a2236;
+    border: 2px solid #1e2d4a;
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    color: #e2e8f0;
+    letter-spacing: 3px;
+    transition: border-color 0.2s;
+  }
+
+  input[type="text"]:focus {
+    outline: none;
+    border-color: #00e5ff;
+  }
+
+  select {
+    width: 100%;
+    background: #1a2236;
+    border: 2px solid #1e2d4a;
+    border-radius: 8px;
+    padding: 13px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: #e2e8f0;
+    cursor: pointer;
+  }
+
+  select:focus { outline: none; border-color: #00e5ff; }
+
+  button#btnConv {
+    width: 100%;
+    background: linear-gradient(135deg, #00e5ff, #7c3aed);
+    border: none;
+    border-radius: 8px;
+    padding: 16px;
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: #000;
+    cursor: pointer;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+
+  button#btnConv:hover { opacity: 0.9; }
+  button#btnConv:active { transform: scale(0.98); }
+
+  .err {
+    color: #ef4444;
+    font-size: 12px;
+    margin-top: 8px;
+    display: none;
+    background: rgba(239,68,68,0.1);
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(239,68,68,0.3);
+  }
+
+  /* Ejemplos */
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  .chip-lbl { font-size: 10px; color: #64748b; width: 100%; margin-bottom: 2px; letter-spacing: 1px; }
+
+  .chip {
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    cursor: pointer;
+    border: 1px solid;
+    font-family: 'JetBrains Mono', monospace;
+    transition: opacity 0.2s;
+  }
+  .chip:hover { opacity: 0.7; }
+  .cb2  { border-color: #00ff88; color: #00ff88; }
+  .cb8  { border-color: #ffd700; color: #ffd700; }
+  .cb10 { border-color: #00e5ff; color: #00e5ff; }
+  .cb16 { border-color: #ff6b35; color: #ff6b35; }
+
+  /* Resultados */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    max-width: 860px;
+    margin: 0 auto 20px;
+  }
+
+  @media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
+
+  .rc {
+    background: #111827;
+    border: 1px solid #1e2d4a;
+    border-radius: 12px;
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: transform 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .rc:hover { transform: translateY(-2px); }
+  .rc::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+
+  .rc.b2  { border-color: rgba(0,255,136,0.3); } .rc.b2::before  { background: #00ff88; }
+  .rc.b8  { border-color: rgba(255,215,0,0.3);  } .rc.b8::before  { background: #ffd700; }
+  .rc.b10 { border-color: rgba(0,229,255,0.3);  } .rc.b10::before { background: #00e5ff; }
+  .rc.b16 { border-color: rgba(255,107,53,0.3); } .rc.b16::before { background: #ff6b35; }
+
+  .rc-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .rc-name { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #64748b; }
+  .rc-badge { font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 700; }
+
+  .rc.b2  .rc-badge { background: rgba(0,255,136,0.1);  color: #00ff88; }
+  .rc.b8  .rc-badge { background: rgba(255,215,0,0.1);  color: #ffd700; }
+  .rc.b10 .rc-badge { background: rgba(0,229,255,0.1);  color: #00e5ff; }
+  .rc.b16 .rc-badge { background: rgba(255,107,53,0.1); color: #ff6b35; }
+
+  .rc-val { font-size: 26px; font-weight: 700; letter-spacing: 3px; word-break: break-all; }
+  .rc.b2  .rc-val { color: #00ff88; }
+  .rc.b8  .rc-val { color: #ffd700; }
+  .rc.b10 .rc-val { color: #00e5ff; }
+  .rc.b16 .rc-val { color: #ff6b35; }
+
+  .rc-tip { font-size: 10px; color: #64748b; margin-top: 6px; opacity: 0; transition: opacity 0.2s; }
+  .rc:hover .rc-tip { opacity: 1; }
+
+  /* Pasos */
+  .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+
+  .tab {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: 1px solid #1e2d4a;
+    color: #64748b;
+    background: transparent;
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.2s;
+  }
+  .tab.on { color: #e2e8f0; border-color: #7c3aed; background: rgba(124,58,237,0.15); }
+
+  .panel { display: none; animation: fi 0.25s ease; }
+  .panel.on { display: block; }
+  @keyframes fi { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Bloques de pasos */
+  .sb {
+    background: #1a2236;
+    border: 1px solid #1e2d4a;
+    border-left: 3px solid #7c3aed;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 14px;
+    line-height: 1.9;
+  }
+  .sb.green  { border-left-color: #00ff88; }
+  .sb.yellow { border-left-color: #ffd700; }
+  .sb.blue   { border-left-color: #00e5ff; }
+  .sb.orange { border-left-color: #ff6b35; }
+
+  .stitle { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; color: #7c3aed; margin-bottom: 8px; }
+  .sb.green  .stitle { color: #00ff88; }
+  .sb.yellow .stitle { color: #ffd700; }
+  .sb.blue   .stitle { color: #00e5ff; }
+  .sb.orange .stitle { color: #ff6b35; }
+
+  .sdesc { color: #64748b; font-size: 12px; line-height: 1.8; margin-bottom: 10px; }
+  .sformula { font-size: 13px; color: #e2e8f0; background: rgba(0,0,0,0.3); padding: 10px 14px; border-radius: 6px; word-break: break-all; }
+
+  .concept {
+    background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(0,229,255,0.05));
+    border: 1px solid rgba(124,58,237,0.3);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 14px;
+  }
+  .concept h3 { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #7c3aed; margin-bottom: 8px; }
+  .concept p  { font-size: 12px; color: #64748b; line-height: 1.8; }
+  .concept p strong { color: #e2e8f0; }
+
+  .step-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    padding: 12px 14px;
+    background: rgba(0,0,0,0.25);
+    border-radius: 8px;
+    border: 1px solid #1e2d4a;
+  }
+  .step-num {
+    min-width: 28px; height: 28px;
+    border-radius: 50%;
+    background: #7c3aed;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-body { flex: 1; font-size: 13px; }
+  .step-exp  { color: #64748b; font-size: 11px; margin-bottom: 4px; }
+  .step-calc { font-size: 15px; margin-bottom: 4px; }
+  .step-note { font-size: 11px; color: #64748b; }
+  .ca { color: #00e5ff; font-weight: 700; }
+  .cg { color: #00ff88; font-weight: 700; }
+  .cy { color: #ffd700; font-weight: 700; }
+  .co { color: #ff6b35; font-weight: 700; }
+  .cm { color: #64748b; }
+
+  .fanswer {
+    background: linear-gradient(135deg, rgba(0,229,255,0.07), rgba(124,58,237,0.07));
+    border: 1px solid #00e5ff;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .fanswer .fl { color: #64748b; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
+  .fanswer .fv { color: #00e5ff; font-weight: 700; font-size: 24px; letter-spacing: 3px; }
+
+  .bits { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 10px; }
+  .bit  { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-weight: 700; font-size: 16px; }
+  .bit0 { background: rgba(100,116,139,0.2); color: #64748b; border: 1px solid #1e2d4a; }
+  .bit1 { background: rgba(0,255,136,0.15); color: #00ff88; border: 1px solid rgba(0,255,136,0.4); }
+  .bit-lbls { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 4px; }
+  .bit-lbl  { width: 34px; text-align: center; font-size: 9px; color: #64748b; }
+
+  .hd { display: inline-block; background: rgba(255,107,53,0.15); color: #ff6b35; border: 1px solid rgba(255,107,53,0.3); padding: 1px 7px; border-radius: 4px; font-weight: 700; margin: 1px; }
+
+  .arrow { text-align: center; color: #64748b; font-size: 20px; margin: 4px 0; }
+
+  .tbl { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+  .tbl th { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #64748b; padding: 8px 12px; text-align: left; border-bottom: 1px solid #1e2d4a; }
+  .tbl td { padding: 8px 12px; border-bottom: 1px solid rgba(30,45,74,0.4); }
+  .tbl tr:last-child td { border-bottom: none; }
+
+  .empty { text-align: center; padding: 40px 20px; color: #64748b; }
+  .empty .ico { font-size: 40px; margin-bottom: 12px; opacity: 0.3; }
+
+  .toast { position: fixed; bottom: 20px; right: 20px; background: #111827; border: 1px solid #00ff88; color: #00ff88; padding: 10px 18px; border-radius: 8px; font-size: 11px; z-index: 999; opacity: 0; transform: translateY(10px); transition: all 0.25s; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<h1>CONVERSOR NUMÉRICO</h1>
+<p class="sub">Binario · Octal · Decimal · Hexadecimal</p>
+
+<!-- ENTRADA -->
+<div class="card">
+  <div class="card-title">Entrada</div>
+  <div class="input-group">
+
+    <div>
+      <label>Número a convertir</label>
+      <input type="text" id="num" placeholder="Escribe el número aquí..." autocomplete="off" spellcheck="false">
+      <div class="err" id="err">⚠ Dígitos inválidos para la base seleccionada</div>
+    </div>
+
+    <div>
+      <label>Sistema de origen (base)</label>
+      <select id="base">
+        <option value="2">Binario — Base 2 (dígitos: 0 y 1)</option>
+        <option value="8">Octal — Base 8 (dígitos: 0 al 7)</option>
+        <option value="10" selected>Decimal — Base 10 (dígitos: 0 al 9)</option>
+        <option value="16">Hexadecimal — Base 16 (dígitos: 0-9 y A-F)</option>
+      </select>
+    </div>
+
+    <button id="btnConv">CONVERTIR →</button>
+
+    <div>
+      <div class="chip-lbl">Ejemplos rápidos:</div>
+      <div class="chips">
+        <span class="chip cb10" onclick="ej('255',10)">255 decimal</span>
+        <span class="chip cb2"  onclick="ej('11001010',2)">11001010 binario</span>
+        <span class="chip cb16" onclick="ej('FF',16)">FF hexadecimal</span>
+        <span class="chip cb8"  onclick="ej('177',8)">177 octal</span>
+        <span class="chip cb10" onclick="ej('1024',10)">1024 decimal</span>
+        <span class="chip cb2"  onclick="ej('10101',2)">10101 binario</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- RESULTADOS -->
+<div class="grid">
+  <div class="rc b2"  onclick="copiar(this)"><div class="rc-head"><span class="rc-name">Binario</span><span class="rc-badge">Base 2</span></div><div class="rc-val" id="r2">—</div><div class="rc-tip">clic para copiar</div></div>
+  <div class="rc b8"  onclick="copiar(this)"><div class="rc-head"><span class="rc-name">Octal</span><span class="rc-badge">Base 8</span></div><div class="rc-val" id="r8">—</div><div class="rc-tip">clic para copiar</div></div>
+  <div class="rc b10" onclick="copiar(this)"><div class="rc-head"><span class="rc-name">Decimal</span><span class="rc-badge">Base 10</span></div><div class="rc-val" id="r10">—</div><div class="rc-tip">clic para copiar</div></div>
+  <div class="rc b16" onclick="copiar(this)"><div class="rc-head"><span class="rc-name">Hexadecimal</span><span class="rc-badge">Base 16</span></div><div class="rc-val" id="r16">—</div><div class="rc-tip">clic para copiar</div></div>
+</div>
+
+<!-- PASOS -->
+<div class="card">
+  <div class="card-title">Proceso de conversión detallado</div>
+  <div class="tabs" id="tabs"></div>
+  <div id="panels">
+    <div class="empty"><div class="ico">⟳</div><p>Ingresa un número arriba y presiona <strong>CONVERTIR</strong></p></div>
+  </div>
+</div>
+
+<div class="toast" id="toast">✓ Copiado al portapapeles</div>
+
+<script>
+const H   = '0123456789ABCDEF';
+const PAT = { 2:/^[01]+$/, 8:/^[0-7]+$/, 10:/^[0-9]+$/, 16:/^[0-9A-Fa-f]+$/ };
+const NOM = { 2:'Binario', 8:'Octal', 10:'Decimal', 16:'Hexadecimal' };
+
+// ── CONVERTIR ──────────────────────────────────────────────────────────
+function conv() {
+  var raw  = document.getElementById('num').value.trim();
+  var base = parseInt(document.getElementById('base').value);
+  var errEl = document.getElementById('err');
+  var inEl  = document.getElementById('num');
+  var val   = raw.toUpperCase();
+
+  if (!val || !PAT[base].test(val)) {
+    errEl.style.display = 'block';
+    inEl.style.borderColor = '#ef4444';
+    return;
+  }
+
+  errEl.style.display = 'none';
+  inEl.style.borderColor = '#00e5ff';
+
+  var dec = parseInt(val, base);
+
+  document.getElementById('r2').textContent  = dec.toString(2);
+  document.getElementById('r8').textContent  = dec.toString(8);
+  document.getElementById('r10').textContent = dec.toString(10);
+  document.getElementById('r16').textContent = dec.toString(16).toUpperCase();
+
+  buildSteps(val, base, dec);
+}
+
+// ── BITS VISUAL ────────────────────────────────────────────────────────
+function bitsVisual(bin) {
+  var bits = bin.split('');
+  var len  = bits.length;
+  var suma = bits.map(function(b,i){ return b==='1' ? '<span class="cg">2<sup>'+(len-1-i)+'</sup>('+Math.pow(2,len-1-i)+')</span>' : null; }).filter(Boolean).join(' + ');
+  return '<div class="sb green">'
+    + '<div class="stitle">🔵 Visualización de Bits</div>'
+    + '<div class="sdesc">Verde (1) = bit encendido, aporta su potencia al total. Gris (0) = bit apagado, vale 0.</div>'
+    + '<div class="bits">' + bits.map(function(b){ return '<div class="bit '+(b==='1'?'bit1':'bit0')+'">'+b+'</div>'; }).join('') + '</div>'
+    + '<div class="bit-lbls">' + bits.map(function(_,i){ return '<div class="bit-lbl">2<sup>'+(len-1-i)+'</sup></div>'; }).join('') + '</div>'
+    + '<div style="margin-top:10px;font-size:12px;color:#64748b">Suma activa: ' + suma + ' = <span class="cg">'+parseInt(bin,2)+'</span></div>'
+    + '</div>';
+}
+
+// ── EXPANSIÓN POSICIONAL (base X → decimal) ────────────────────────────
+function panelExpansion(val, base, dec) {
+  var digits = val.split('');
+  var len    = digits.length;
+
+  var conceptos = {
+    2:  ['¿Qué es el Sistema Binario?',  'Solo usa <strong>dos dígitos: 0 y 1</strong>. Cada posición es una <strong>potencia de 2</strong> (2⁰=1, 2¹=2, 2²=4, 2³=8...). Es el lenguaje de las computadoras: un transistor puede estar apagado (0) o encendido (1).'],
+    8:  ['¿Qué es el Sistema Octal?',    'Usa <strong>ocho dígitos: 0 al 7</strong>. Cada posición es una <strong>potencia de 8</strong> (8⁰=1, 8¹=8, 8²=64...). Se usó en Unix porque 3 bits binarios = 1 dígito octal exactamente.'],
+    16: ['¿Qué es el Sistema Hexadecimal?', 'Usa <strong>16 símbolos: 0-9 y A-F</strong> (A=10, B=11, C=12, D=13, E=14, F=15). Cada posición es una <strong>potencia de 16</strong>. Muy usado en programación: 1 dígito hex = 4 bits binarios.'],
+    10: ['¿Qué es el Sistema Decimal?',  'El sistema de uso diario. Tiene <strong>10 dígitos: 0 al 9</strong>. Cada posición es una <strong>potencia de 10</strong> (10⁰=1, 10¹=10, 10²=100...).']
+  };
+
+  var c = conceptos[base];
+  var html = '<div class="concept"><h3>'+c[0]+'</h3><p>'+c[1]+'</p></div>';
+
+  html += '<div class="sb blue">'
+    + '<div class="stitle">📐 Método: Expansión Posicional</div>'
+    + '<div class="sdesc">Para convertir <strong>'+val+'</strong> (base '+base+') a Decimal, multiplicamos cada dígito por <strong>'+base+'<sup>posición</sup></strong>. La posición se cuenta de <strong>derecha a izquierda empezando en 0</strong>.</div>'
+    + '<div class="sformula">Fórmula: dígito × base<sup>posición</sup> + dígito × base<sup>posición</sup> + ...</div>'
+    + '</div>';
+
+  // Tabla de posiciones
+  html += '<div class="sb"><div class="stitle">📋 Posición de cada dígito en '+val+'</div>'
+    + '<div class="sdesc">Numeramos las posiciones de derecha a izquierda comenzando en 0:</div>'
+    + '<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Dígito</th>'+(base===16?'<th>Val. Dec.</th>':'')+'<th>Posición</th><th>'+base+'<sup>pos</sup></th><th>Valor de potencia</th></tr></thead><tbody>';
+  digits.forEach(function(d,i){
+    var pos = len-1-i;
+    var dv  = parseInt(d,base);
+    var pw  = Math.pow(base,pos);
+    html += '<tr><td class="ca" style="font-size:16px;font-weight:700">'+d+'</td>'+(base===16?'<td class="cg">'+dv+'</td>':'')+'<td class="co">'+pos+'</td><td>'+base+'<sup>'+pos+'</sup></td><td class="cy">'+pw+'</td></tr>';
+  });
+  html += '</tbody></table></div></div>';
+
+  // Pasos uno a uno
+  html += '<div class="sb"><div class="stitle">🔢 Cálculo paso a paso</div>'
+    + '<div class="sdesc">Multiplicamos cada dígito por su potencia y acumulamos:</div>';
+  var acum = 0;
+  digits.forEach(function(d,i){
+    var pos    = len-1-i;
+    var dv     = parseInt(d,base);
+    var pw     = Math.pow(base,pos);
+    var contrib= dv*pw;
+    acum += contrib;
+    var hexNote= (base===16 && dv>=10) ? ' ('+d+' en hex = '+dv+' en decimal)' : '';
+    html += '<div class="step-row">'
+      + '<div class="step-num">'+(i+1)+'</div>'
+      + '<div class="step-body">'
+      + '<div class="step-exp">Dígito <strong>'+d+'</strong>'+hexNote+' en posición <strong>'+pos+'</strong> (desde la derecha)</div>'
+      + '<div class="step-calc"><span class="ca">'+dv+'</span> <span class="cm">× '+base+'<sup>'+pos+'</sup> = '+dv+' × '+pw+' =</span> <span class="cg">'+contrib+'</span></div>'
+      + '<div class="step-note">Acumulado: '+acum+'</div>'
+      + '</div></div>';
+  });
+  html += '</div>';
+
+  var formula = digits.map(function(d,i){ return parseInt(d,base)+'×'+Math.pow(base,len-1-i); }).join(' + ');
+  html += '<div class="fanswer"><div class="fl">'+formula+' = '+dec+'</div><span class="fv">'+dec+'₁₀</span></div>';
+  if (base===2) html += bitsVisual(val);
+  return html;
+}
+
+// ── DIVISIONES SUCESIVAS (decimal → base X) ────────────────────────────
+function panelDivisiones(dec, base) {
+  var sym = base===2?'₂':base===8?'₈':'₁₆';
+
+  var conceptos = {
+    2:  ['¿Por qué dividir entre 2?',  'En binario solo hay 2 dígitos (0 y 1). Al dividir entre 2, el <strong>residuo siempre será 0 o 1</strong>, que son exactamente los dígitos binarios. Leemos los residuos de abajo hacia arriba.'],
+    8:  ['¿Por qué dividir entre 8?',  'En octal hay 8 dígitos (0-7). Al dividir entre 8, el <strong>residuo es siempre 0-7</strong>, que son los dígitos octales. Leemos los residuos de abajo hacia arriba.'],
+    16: ['¿Por qué dividir entre 16?', 'En hex hay 16 símbolos (0-9, A-F). Al dividir entre 16, el <strong>residuo es 0-15</strong>. Si ≥10, se usa letra: 10→A, 11→B, 12→C, 13→D, 14→E, 15→F. Leemos los residuos de abajo hacia arriba.']
+  };
+
+  var c = conceptos[base];
+  var html = '<div class="concept"><h3>'+c[0]+'</h3><p>'+c[1]+'</p></div>';
+
+  html += '<div class="sb yellow">'
+    + '<div class="stitle">📐 Método: Divisiones Sucesivas entre '+base+'</div>'
+    + '<div class="sdesc">Dividimos <strong>'+dec+'</strong> entre <strong>'+base+'</strong> repetidamente hasta que el cociente sea 0. Anotamos cada residuo. El resultado se forma leyendo los residuos <strong>de abajo ↑ hacia arriba</strong>.</div>'
+    + '<div class="sformula">Regla: número ÷ '+base+' → guardar residuo → repetir con el cociente → leer residuos al revés</div>'
+    + '</div>';
+
+  // Calcular
+  var rows = [];
+  var n = dec;
+  if (n===0) {
+    rows.push({div:0,coc:0,res:0,hc:'0'});
+  } else {
+    while (n>0) {
+      var r = n % base;
+      rows.push({div:n, coc:Math.floor(n/base), res:r, hc:H[r]});
+      n = Math.floor(n/base);
+    }
+  }
+
+  var resultado = (base===16)
+    ? rows.map(function(r){return r.hc;}).reverse().join('')
+    : rows.map(function(r){return String(r.res);}).reverse().join('');
+
+  // Pasos
+  html += '<div class="sb"><div class="stitle">🔢 Cada división explicada</div>'
+    + '<div class="sdesc">Realizamos <strong>'+rows.length+' división'+(rows.length>1?'es':'')+'</strong> en total. El cociente de cada paso se convierte en el dividendo del siguiente:</div>';
+
+  rows.forEach(function(row,i){
+    var isLast = (i===rows.length-1);
+    var hexNote = (base===16 && row.res>=10) ? ', que en hex es <span class="co hd">'+row.hc+'</span>' : '';
+    html += '<div class="step-row">'
+      + '<div class="step-num" style="background:#b45309;color:#fff">'+(i+1)+'</div>'
+      + '<div class="step-body">'
+      + '<div class="step-exp">'+(isLast?'🏁 Última división — este residuo será el dígito más significativo (va primero en el resultado)':'División '+(i+1))+'</div>'
+      + '<div class="step-calc"><span class="ca">'+row.div+'</span> <span class="cm">÷ '+base+' =</span> <span class="cg">cociente '+row.coc+'</span> <span class="cm">, residuo</span> <span class="cy">'+row.res+'</span>'+hexNote+'</div>'
+      + '<div class="step-note">'+(isLast?'Residuo leído primero (posición más alta)':'El cociente '+row.coc+' → pasa a la siguiente división ↓')+'</div>'
+      + '</div></div>';
+    if (!isLast) html += '<div class="arrow">↓</div>';
+  });
+  html += '</div>';
+
+  // Lectura
+  var residuos = (base===16) ? rows.map(function(r){return r.hc;}) : rows.map(function(r){return String(r.res);});
+  html += '<div class="sb orange">'
+    + '<div class="stitle">📖 Lectura del resultado (de abajo ↑ hacia arriba)</div>'
+    + '<div class="sdesc">Los residuos se obtuvieron en este orden: <strong>'+residuos.join(', ')+'</strong><br>Leídos al revés: <strong>'+[...residuos].reverse().join(', ')+'</strong> → se forma el número <strong>'+resultado+'</strong></div>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center">'
+    + residuos.map(function(r,i){
+        return '<div style="text-align:center">'
+          +'<div style="font-size:10px;color:#64748b;margin-bottom:3px">paso '+(i+1)+'</div>'
+          +'<div class="co" style="background:rgba(255,107,53,.15);border:1px solid rgba(255,107,53,.3);padding:6px 14px;border-radius:6px;font-weight:700;font-size:18px">'+r+'</div>'
+          +'</div>';
+      }).join('<div style="color:#64748b;align-self:center;margin-top:14px">→</div>')
+    + '<div style="color:#64748b;align-self:center;margin-top:14px;font-size:22px">⟹</div>'
+    + '<div style="text-align:center"><div style="font-size:10px;color:#64748b;margin-bottom:3px">resultado</div>'
+    + '<div style="background:rgba(0,229,255,.1);color:#00e5ff;border:1px solid #00e5ff;padding:6px 18px;border-radius:6px;font-weight:700;font-size:20px;letter-spacing:2px">'+resultado+'</div></div>'
+    + '</div></div>';
+
+  // Verificación
+  var verif = parseInt(resultado, base);
+  var rDigs  = resultado.split('');
+  var rLen   = rDigs.length;
+  var parts  = rDigs.map(function(d,i){ var dv=parseInt(d,base); var pos=rLen-1-i; return dv+'×'+Math.pow(base,pos); });
+  html += '<div class="sb green">'
+    + '<div class="stitle">✅ Verificación — convertir de vuelta a decimal</div>'
+    + '<div class="sdesc">Comprobamos que <strong>'+resultado+sym+'</strong> convertido a decimal dé <strong>'+dec+'</strong>:</div>'
+    + '<div class="sformula">'+parts.join(' + ')+' = <span class="cg">'+verif+'</span> '+(verif===dec?'✓ ¡Correcto!':'✗ Error')+'</div>'
+    + '</div>';
+
+  html += '<div class="fanswer"><div class="fl">'+dec+' en decimal equivale a</div><span class="fv">'+resultado+sym+'</span></div>';
+  if (base===2) html += bitsVisual(resultado);
+  return html;
+}
+
+// ── CONSTRUIR PESTAÑAS ─────────────────────────────────────────────────
+function buildSteps(val, base, dec) {
+  var convs = [];
+
+  if (base===10) {
+    convs.push({id:'dec', label:'Sistema Decimal',  html: panelExpansion(val,10,dec)});
+    convs.push({id:'to2', label:'→ Binario',        html: panelDivisiones(dec,2)});
+    convs.push({id:'to8', label:'→ Octal',          html: panelDivisiones(dec,8)});
+    convs.push({id:'t16', label:'→ Hexadecimal',    html: panelDivisiones(dec,16)});
+  } else {
+    convs.push({id:'tod', label: NOM[base]+' → Decimal', html: panelExpansion(val,base,dec)});
+    if (base!==2)  convs.push({id:'to2', label:'Decimal → Binario',      html: panelDivisiones(dec,2)});
+    if (base!==8)  convs.push({id:'to8', label:'Decimal → Octal',        html: panelDivisiones(dec,8)});
+    if (base!==16) convs.push({id:'t16', label:'Decimal → Hexadecimal',  html: panelDivisiones(dec,16)});
+  }
+
+  document.getElementById('tabs').innerHTML = convs.map(function(c,i){
+    return '<button class="tab'+(i===0?' on':'')+'" onclick="switchTab(\''+c.id+'\',this)">'+c.label+'</button>';
+  }).join('');
+
+  document.getElementById('panels').innerHTML = convs.map(function(c,i){
+    return '<div class="panel'+(i===0?' on':'')+'" id="p-'+c.id+'">'+c.html+'</div>';
+  }).join('');
+}
+
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('on'); });
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('on'); });
+  btn.classList.add('on');
+  document.getElementById('p-'+id).classList.add('on');
+}
+
+function ej(v, b) {
+  document.getElementById('num').value = v;
+  document.getElementById('base').value = b;
+  conv();
+}
+
+function copiar(card) {
+  var v = card.querySelector('.rc-val').textContent;
+  if (v==='—') return;
+  try {
+    navigator.clipboard.writeText(v).then(function(){
+      var t = document.getElementById('toast');
+      t.classList.add('show');
+      setTimeout(function(){ t.classList.remove('show'); }, 1800);
+    });
+  } catch(e) {}
+}
+
+// Eventos — usando onclick directo + addEventListener como respaldo
+document.getElementById('btnConv').onclick = conv;
+
+document.getElementById('num').onkeydown = function(e) {
+  if (e.key === 'Enter') conv();
+};
+
+document.getElementById('num').oninput = function() {
+  this.style.borderColor = '#1e2d4a';
+  document.getElementById('err').style.display = 'none';
+  if (parseInt(document.getElementById('base').value) === 16)
+    this.value = this.value.toUpperCase();
+};
+</script>
+</body>
+</html>
